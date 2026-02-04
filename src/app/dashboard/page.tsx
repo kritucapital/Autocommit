@@ -624,13 +624,19 @@ export default function Dashboard() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
+                            transition={{ duration: 0.15 }}
                             className="mobile-menu"
                             style={{
-                                background: 'rgba(15, 23, 42, 0.98)',
-                                backdropFilter: 'blur(20px)',
-                                borderTop: '1px solid rgba(56, 189, 248, 0.15)',
+                                position: 'fixed',
+                                top: '60px',
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                background: '#0a0f1c',
+                                borderTop: '1px solid var(--border)',
                                 padding: '1.25rem',
+                                zIndex: 999,
+                                overflowY: 'auto',
                             }}
                         >
                             <div className="container">
