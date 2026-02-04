@@ -333,7 +333,7 @@ h3 {
   gap: 0.25rem;
 }
 
-/* Navigation - smooth blur */
+/* Navigation - solid background */
 .navbar {
   position: fixed;
   top: 0;
@@ -341,9 +341,7 @@ h3 {
   right: 0;
   z-index: 100;
   padding: 1rem 0;
-  background: rgba(10, 15, 28, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg-primary);
   border-bottom: 1px solid var(--border);
   transform: translateZ(0);
 }
@@ -516,7 +514,9 @@ h3 {
 
 .repo-info {
   flex: 1;
-  min-width: 200px;
+  min-width: 0;
+  /* Allow flex child to shrink below content size */
+  overflow: hidden;
 }
 
 .repo-name {
@@ -524,6 +524,9 @@ h3 {
   color: var(--text-primary);
   font-size: 1.1rem;
   transition: color var(--transition-fast);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .repo-card:hover .repo-name {
@@ -853,6 +856,226 @@ h3 {
   scrollbar-color: var(--border-light) var(--bg-secondary);
 }
 
+/* Auth Pages (Forgot Password, Reset Password) */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, #0f172a 50%, var(--bg-secondary) 100%);
+  position: relative;
+}
+
+.auth-page::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 30%, var(--accent-glow) 0%, transparent 40%);
+  opacity: 0.4;
+  pointer-events: none;
+  animation: floatGlow 20s ease-in-out infinite;
+}
+
+.auth-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 420px;
+  backdrop-filter: blur(20px);
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-header h1 {
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.auth-header p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon svg {
+  position: absolute;
+  left: 1rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.input-with-icon input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 2.75rem;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border);
+  border-radius: 0.75rem;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-family: inherit;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.input-with-icon input:hover {
+  border-color: var(--border-light);
+}
+
+.input-with-icon input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 4px var(--accent-glow);
+  background-color: var(--bg-primary);
+}
+
+.input-with-icon input::placeholder {
+  color: var(--text-muted);
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  transition: color var(--transition-fast);
+}
+
+.back-link:hover {
+  color: var(--accent-secondary);
+}
+
+.auth-switch {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.auth-switch a {
+  color: var(--accent-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+
+.auth-switch a:hover {
+  color: var(--accent-primary);
+}
+
+.success-message {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.success-icon {
+  color: var(--success);
+  margin-bottom: 1rem;
+}
+
+.success-message h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.success-message p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* Password requirements styling */
+.password-requirements {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.password-requirements p {
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.password-requirements ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.password-requirements li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+}
+
+.password-requirements li.valid {
+  color: var(--success);
+}
+
+/* Auth page responsive */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 1.5rem;
+    border-radius: 1rem;
+  }
+
+  .auth-header h1 {
+    font-size: 1.5rem;
+  }
+}
+
 /* Modal */
 .modal-overlay {
   position: fixed;
@@ -1011,11 +1234,25 @@ h3 {
 /* Mobile menu styles */
 .mobile-menu {
   display: none;
-  background: var(--bg-card);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
 .mobile-menu-btn {
   display: none !important;
+}
+
+/* User dropdown styling */
+.user-dropdown {
+  background: var(--bg-primary) !important;
+  backdrop-filter: none !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* CTA Buttons */
@@ -1137,16 +1374,45 @@ h3 {
     margin: 1rem;
   }
 
-  /* Dashboard header */
+  /* Dashboard header - keep inline on mobile */
   .dashboard-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start !important;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    align-items: center !important;
+    justify-content: space-between;
+  }
+
+  .dashboard-header h1 {
+    font-size: 1.25rem !important;
+    white-space: nowrap;
   }
 
   .dashboard-header>div {
-    width: 100%;
-    flex-wrap: wrap;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+    gap: 0.5rem !important;
+  }
+
+  .dashboard-header .btn {
+    padding: 0.4rem 0.6rem !important;
+    font-size: 0.75rem !important;
+    gap: 0.25rem !important;
+  }
+
+  .dashboard-header .btn svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  .dashboard-header .btn span {
+    display: none;
+  }
+
+  /* Show icon only for monitoring button on mobile */
+  .dashboard-header .btn-primary span,
+  .dashboard-header .btn-danger span {
+    display: inline;
   }
 
   /* Repository cards */
@@ -1193,8 +1459,9 @@ h3 {
 
   .modal {
     margin: 0.5rem;
-    padding: 1.25rem;
-    border-radius: 1rem;
+    padding: 1rem 0.875rem;
+    border-radius: 0.875rem;
+    max-height: 85vh;
   }
 
   .modal-header h2 {

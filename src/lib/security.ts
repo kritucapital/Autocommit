@@ -1,8 +1,18 @@
 import crypto from 'crypto';
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'autocommit-default-key-32chars!';
 const IV_LENGTH = 16;
 const ALGORITHM = 'aes-256-cbc';
+
+// Get encryption key with validation
+function getEncryptionKey(): string {
+    const key = process.env.ENCRYPTION_KEY;
+    if (!key) {
+        throw new Error('ENCRYPTION_KEY environment variable is required. Please set it in your .env file.');
+    }
+    return key;
+}
+
+const ENCRYPTION_KEY = getEncryptionKey();
 
 // Ensure key is exactly 32 bytes
 function getKey(): Buffer {
@@ -34,26 +44,11 @@ export function decrypt(encryptedText: string): string {
     return decrypted;
 }
 
-// Simple in-memory rate limiter
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const MAX_REQUESTS = 100; // 100 requests per minute
-
-export function checkRateLimit(identifier: string): { allowed: boolean; remaining: number } {
-    const now = Date.now();
-    const existing = rateLimitMap.get(identifier);
-
-    if (!existing || now > existing.resetTime) {
-        rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-        return { allowed: true, remaining: MAX_REQUESTS - 1 };
-    }
-
-    if (existing.count >= MAX_REQUESTS) {
-        return { allowed: false, remaining: 0 };
-    }
-
-    existing.count++;
-    return { allowed: true, remaining: MAX_REQUESTS - existing.count };
+// Rate limiting removed - in-memory rate limiting doesn't scale across serverless instances
+// For production at scale, implement with Redis (e.g., @upstash/ratelimit)
+// This is a no-op that always allows requests
+export function checkRateLimit(_identifier: string): { allowed: boolean; remaining: number } {
+    return { allowed: true, remaining: 999 };
 }
 
 // Input sanitization

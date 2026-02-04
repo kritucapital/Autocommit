@@ -33,6 +33,7 @@ export default function Dashboard() {
         email,
         username,
         avatarUrl,
+        token,
         repositories,
         activityLog,
         isPolling,
@@ -43,6 +44,7 @@ export default function Dashboard() {
         removeRepository,
         toggleRepoActive,
         addActivityLog,
+        setActivityLog,
         setPolling,
         setPollInterval,
         clearActivityLog,
@@ -78,6 +80,17 @@ export default function Dashboard() {
     const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+    // Helper to get auth headers (JWT + fallback username for backwards compatibility)
+    const getAuthHeaders = (): HeadersInit => {
+        const headers: HeadersInit = {
+            'x-github-username': username || '',
+        };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
+    };
+
     // Redirect if not authenticated, fetch data when authenticated and username is ready
     useEffect(() => {
         if (!isAuthenticated) {
@@ -87,14 +100,30 @@ export default function Dashboard() {
             setIsLoading(false);
             fetchRepositories();
             fetchMonitoringStatus();
+            fetchActivityLogs();
         }
     }, [isAuthenticated, username, router]);
+
+    // Fetch activity logs from database
+    const fetchActivityLogs = async () => {
+        try {
+            const response = await fetch('/api/activity', {
+                headers: getAuthHeaders(),
+            });
+            const data = await response.json();
+            if (data.success && data.logs) {
+                setActivityLog(data.logs);
+            }
+        } catch (error) {
+            console.error('Failed to fetch activity logs:', error);
+        }
+    };
 
     // Fetch repositories from API
     const fetchRepositories = async () => {
         try {
             const response = await fetch('/api/repos', {
-                headers: { 'x-github-username': username || '' },
+                headers: getAuthHeaders(),
             });
             const data = await response.json();
             if (data.success) {
@@ -109,7 +138,7 @@ export default function Dashboard() {
     const fetchMonitoringStatus = async () => {
         try {
             const response = await fetch('/api/monitoring', {
-                headers: { 'x-github-username': username || '' },
+                headers: getAuthHeaders(),
             });
             const data = await response.json();
             if (data.success) {
@@ -134,7 +163,7 @@ export default function Dashboard() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-github-username': username || '',
+                    ...getAuthHeaders(),
                 },
                 body: JSON.stringify({
                     enabled: !isBackgroundMonitoringEnabled,
@@ -171,7 +200,7 @@ export default function Dashboard() {
 
         try {
             const response = await fetch('/api/poll', {
-                headers: { 'x-github-username': username },
+                headers: getAuthHeaders(),
             });
             const data = await response.json();
 
@@ -235,7 +264,7 @@ export default function Dashboard() {
         setAddError('');
         try {
             const response = await fetch('/api/github/repos', {
-                headers: { 'x-github-username': username || '' },
+                headers: getAuthHeaders(),
             });
             const data = await response.json();
             if (data.success) {
@@ -287,7 +316,7 @@ export default function Dashboard() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-github-username': username || '',
+                        ...getAuthHeaders(),
                     },
                     body: JSON.stringify({ owner, repo }),
                 });
@@ -336,7 +365,7 @@ export default function Dashboard() {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-github-username': username || '',
+                    ...getAuthHeaders(),
                 },
                 body: JSON.stringify({ owner: repo.owner, repo: repo.name }),
             });
@@ -364,7 +393,7 @@ export default function Dashboard() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-github-username': username || '',
+                    ...getAuthHeaders(),
                 },
                 body: JSON.stringify({
                     owner: repo.owner,
@@ -378,6 +407,19 @@ export default function Dashboard() {
             }
         } catch (error) {
             console.error('Failed to toggle monitoring:', error);
+        }
+    };
+
+    // Handle clear activity log (clear from both store and database)
+    const handleClearActivityLog = async () => {
+        clearActivityLog(); // Clear local store immediately
+        try {
+            await fetch('/api/activity', {
+                method: 'DELETE',
+                headers: getAuthHeaders(),
+            });
+        } catch (error) {
+            console.error('Failed to clear activity logs from database:', error);
         }
     };
 
@@ -512,13 +554,12 @@ export default function Dashboard() {
                                             position: 'absolute',
                                             top: 'calc(100% + 0.75rem)',
                                             right: 0,
-                                            background: 'rgba(15, 23, 42, 0.95)',
-                                            backdropFilter: 'blur(20px)',
-                                            border: '1px solid rgba(56, 189, 248, 0.2)',
+                                            background: 'var(--bg-primary)',
+                                            border: '1px solid var(--border)',
                                             borderRadius: '1rem',
                                             padding: '0.75rem',
                                             minWidth: '200px',
-                                            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4), 0 0 40px rgba(14, 165, 233, 0.1)',
+                                            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
                                             zIndex: 100,
                                         }}
                                     >
@@ -624,19 +665,12 @@ export default function Dashboard() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 0.15 }}
+                            transition={{ duration: 0.2 }}
                             className="mobile-menu"
                             style={{
-                                position: 'fixed',
-                                top: '60px',
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                background: '#0a0f1c',
+                                background: 'var(--bg-primary)',
                                 borderTop: '1px solid var(--border)',
                                 padding: '1.25rem',
-                                zIndex: 999,
-                                overflowY: 'auto',
                             }}
                         >
                             <div className="container">
@@ -764,8 +798,6 @@ export default function Dashboard() {
                                     color: 'var(--success)',
                                     fontSize: '0.85rem',
                                 }}>
-                                    <Server size={16} />
-                                    <span>Background Service Active</span>
                                 </span>
                             )}
                             <button
@@ -830,6 +862,7 @@ export default function Dashboard() {
                                 {isPolling ? 'Active' : 'Paused'}
                             </div>
                             <div className="stat-label">Polling Status</div>
+                            <span style={{ color: isPolling ? 'var(--success)' : 'var(--text-muted)' }}>Background Service {isPolling ? 'Active' : 'Paused'}</span>
                         </div>
                     </motion.div>
 
@@ -925,7 +958,7 @@ export default function Dashboard() {
                         <div className="section-header">
                             <h2>Activity Log</h2>
                             {activityLog.length > 0 && (
-                                <button onClick={clearActivityLog} className="btn btn-secondary btn-sm">
+                                <button onClick={handleClearActivityLog} className="btn btn-secondary btn-sm">
                                     Clear Log
                                 </button>
                             )}

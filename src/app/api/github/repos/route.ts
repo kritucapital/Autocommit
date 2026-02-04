@@ -2,22 +2,33 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import { getUserRepositories } from '@/lib/github';
-import { decrypt, securityHeaders, sanitizeInput } from '@/lib/security';
+import { decrypt, securityHeaders } from '@/lib/security';
+import { validateJWT } from '@/lib/jwt';
+
+// Helper to validate JWT and return username
+function authenticateRequest(request: NextRequest): { username: string } | NextResponse {
+    const authHeader = request.headers.get('authorization');
+    const payload = validateJWT(authHeader);
+
+    if (!payload) {
+        return NextResponse.json(
+            { error: 'Unauthorized. Please log in again.' },
+            { status: 401, headers: securityHeaders }
+        );
+    }
+
+    return { username: payload.username };
+}
 
 // Get all repositories the user has access to from GitHub
 export async function GET(request: NextRequest) {
     try {
-        const username = request.headers.get('x-github-username');
-
-        if (!username) {
-            return NextResponse.json(
-                { error: 'Username header required' },
-                { status: 400, headers: securityHeaders }
-            );
-        }
+        const auth = authenticateRequest(request);
+        if (auth instanceof NextResponse) return auth;
+        const { username } = auth;
 
         await dbConnect();
-        const user = await User.findOne({ githubUsername: sanitizeInput(username) });
+        const user = await User.findOne({ githubUsername: username });
 
         if (!user) {
             return NextResponse.json(

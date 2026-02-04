@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import { checkForNewCommits, performAutoCommit } from '@/lib/github';
-import { decrypt, checkRateLimit, securityHeaders, sanitizeInput } from '@/lib/security';
+import { decrypt, checkRateLimit, securityHeaders } from '@/lib/security';
+import { validateJWT } from '@/lib/jwt';
 
 export interface PollResult {
     repo: string;
@@ -16,14 +17,18 @@ export interface PollResult {
 // Poll all active repositories for new commits
 export async function GET(request: NextRequest) {
     try {
-        const username = request.headers.get('x-github-username');
+        // Validate JWT token
+        const authHeader = request.headers.get('authorization');
+        const payload = validateJWT(authHeader);
 
-        if (!username) {
+        if (!payload) {
             return NextResponse.json(
-                { error: 'Username header required' },
-                { status: 400, headers: securityHeaders }
+                { error: 'Unauthorized. Please log in again.' },
+                { status: 401, headers: securityHeaders }
             );
         }
+
+        const username = payload.username;
 
         // Rate limiting - stricter for polling
         const rateLimit = checkRateLimit(`poll_${username}`);
@@ -35,7 +40,7 @@ export async function GET(request: NextRequest) {
         }
 
         await dbConnect();
-        const user = await User.findOne({ githubUsername: sanitizeInput(username) });
+        const user = await User.findOne({ githubUsername: username });
 
         if (!user) {
             return NextResponse.json(
@@ -112,6 +117,25 @@ export async function GET(request: NextRequest) {
             }
 
             results.push(result);
+
+            // Save activity log to database if something happened
+            if (result.autoCommitTriggered || result.newCommit) {
+                const logEntry = {
+                    repo: repo.fullName,
+                    action: result.autoCommitTriggered
+                        ? (result.autoCommitSuccess ? 'Auto-Commit Success' : 'Auto-Commit Failed')
+                        : 'Commit Detected',
+                    message: result.message,
+                    success: result.autoCommitTriggered ? result.autoCommitSuccess : true,
+                    timestamp: new Date(),
+                };
+
+                // Add to beginning and keep only last 50 logs
+                user.activityLogs.unshift(logEntry);
+                if (user.activityLogs.length > 50) {
+                    user.activityLogs = user.activityLogs.slice(0, 50);
+                }
+            }
         }
 
         await user.save();

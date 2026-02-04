@@ -6,6 +6,11 @@ export const metadata: Metadata = {
     description: "Automatically commit to your repositories when collaborators make changes. Stay active on GitHub effortlessly.",
     keywords: "GitHub, auto commit, bot, repository, commit automation",
     authors: [{ name: "AutoCommit" }],
+    icons: {
+        icon: "/image.png",
+        shortcut: "/image.png",
+        apple: "/image.png",
+    },
 };
 
 export default function RootLayout({

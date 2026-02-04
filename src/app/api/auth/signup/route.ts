@@ -4,6 +4,7 @@ import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import { validateToken } from '@/lib/github';
 import { encrypt, checkRateLimit, isValidTokenFormat, securityHeaders, sanitizeInput } from '@/lib/security';
+import { signToken } from '@/lib/jwt';
 
 export async function POST(request: NextRequest) {
     try {
@@ -113,10 +114,18 @@ export async function POST(request: NextRequest) {
             pollInterval: 30000,
         });
 
+        // Generate JWT token
+        const jwtToken = signToken({
+            userId: user._id.toString(),
+            email: user.email,
+            username: user.githubUsername,
+        });
+
         return NextResponse.json(
             {
                 success: true,
                 message: 'Account created successfully',
+                token: jwtToken,
                 user: {
                     email: user.email,
                     username: user.githubUsername,

@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import { checkRateLimit, securityHeaders, sanitizeInput } from '@/lib/security';
+import { signToken } from '@/lib/jwt';
 
 export async function POST(request: NextRequest) {
     try {
@@ -57,9 +58,17 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Generate JWT token
+        const token = signToken({
+            userId: user._id.toString(),
+            email: user.email,
+            username: user.githubUsername,
+        });
+
         return NextResponse.json(
             {
                 success: true,
+                token,
                 user: {
                     email: user.email,
                     username: user.githubUsername,

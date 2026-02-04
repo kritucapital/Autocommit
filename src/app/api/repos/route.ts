@@ -3,18 +3,29 @@ import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import { getRepoInfo, getRepositoryCommits } from '@/lib/github';
 import { decrypt, checkRateLimit, isValidRepoFormat, securityHeaders, sanitizeInput } from '@/lib/security';
+import { validateJWT } from '@/lib/jwt';
+
+// Helper to validate JWT and return username
+function authenticateRequest(request: NextRequest): { username: string } | NextResponse {
+    const authHeader = request.headers.get('authorization');
+    const payload = validateJWT(authHeader);
+
+    if (!payload) {
+        return NextResponse.json(
+            { error: 'Unauthorized. Please log in again.' },
+            { status: 401, headers: securityHeaders }
+        );
+    }
+
+    return { username: payload.username };
+}
 
 // GET - Fetch user's repositories
 export async function GET(request: NextRequest) {
     try {
-        const username = request.headers.get('x-github-username');
-
-        if (!username) {
-            return NextResponse.json(
-                { error: 'Username header required' },
-                { status: 400, headers: securityHeaders }
-            );
-        }
+        const auth = authenticateRequest(request);
+        if (auth instanceof NextResponse) return auth;
+        const { username } = auth;
 
         // Rate limiting
         const rateLimit = checkRateLimit(username);
@@ -26,7 +37,7 @@ export async function GET(request: NextRequest) {
         }
 
         await dbConnect();
-        const user = await User.findOne({ githubUsername: sanitizeInput(username) });
+        const user = await User.findOne({ githubUsername: username });
 
         if (!user) {
             return NextResponse.json(
@@ -51,15 +62,11 @@ export async function GET(request: NextRequest) {
 // POST - Add a new repository to monitor
 export async function POST(request: NextRequest) {
     try {
-        const username = request.headers.get('x-github-username');
-        const { owner, repo } = await request.json();
+        const auth = authenticateRequest(request);
+        if (auth instanceof NextResponse) return auth;
+        const { username } = auth;
 
-        if (!username) {
-            return NextResponse.json(
-                { error: 'Username header required' },
-                { status: 400, headers: securityHeaders }
-            );
-        }
+        const { owner, repo } = await request.json();
 
         // Sanitize inputs
         const sanitizedOwner = sanitizeInput(owner || '');
@@ -90,7 +97,7 @@ export async function POST(request: NextRequest) {
         }
 
         await dbConnect();
-        const user = await User.findOne({ githubUsername: sanitizeInput(username) });
+        const user = await User.findOne({ githubUsername: username });
 
         if (!user) {
             return NextResponse.json(
@@ -159,15 +166,11 @@ export async function POST(request: NextRequest) {
 // DELETE - Remove a repository from monitoring
 export async function DELETE(request: NextRequest) {
     try {
-        const username = request.headers.get('x-github-username');
-        const { owner, repo } = await request.json();
+        const auth = authenticateRequest(request);
+        if (auth instanceof NextResponse) return auth;
+        const { username } = auth;
 
-        if (!username) {
-            return NextResponse.json(
-                { error: 'Username header required' },
-                { status: 400, headers: securityHeaders }
-            );
-        }
+        const { owner, repo } = await request.json();
 
         const sanitizedOwner = sanitizeInput(owner || '');
         const sanitizedRepo = sanitizeInput(repo || '');
@@ -180,7 +183,7 @@ export async function DELETE(request: NextRequest) {
         }
 
         await dbConnect();
-        const user = await User.findOne({ githubUsername: sanitizeInput(username) });
+        const user = await User.findOne({ githubUsername: username });
 
         if (!user) {
             return NextResponse.json(

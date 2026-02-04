@@ -75,7 +75,7 @@ function AuthForm() {
                 return;
             }
 
-            setUser(data.user.email, data.user.username, data.user.avatarUrl);
+            setUser(data.user.email, data.user.username, data.user.avatarUrl, data.token);
             router.push('/dashboard');
         } catch {
             setError('Something went wrong. Please try again.');
@@ -248,6 +248,22 @@ function AuthForm() {
                                         </button>
                                     </div>
                                 </div>
+
+                                {/* Forgot Password Link (only for login) */}
+                                {authMode === 'login' && (
+                                    <div style={{ textAlign: 'right', marginTop: '-0.5rem' }}>
+                                        <Link
+                                            href="/forgot-password"
+                                            style={{
+                                                fontSize: '0.85rem',
+                                                color: 'var(--accent-primary)',
+                                                textDecoration: 'none',
+                                            }}
+                                        >
+                                            Forgot password?
+                                        </Link>
+                                    </div>
+                                )}
 
                                 {/* GitHub Token (only for signup) */}
                                 {authMode === 'signup' && (

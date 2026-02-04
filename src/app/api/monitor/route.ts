@@ -2,19 +2,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import { checkRateLimit, securityHeaders, sanitizeInput } from '@/lib/security';
+import { validateJWT } from '@/lib/jwt';
+
+// Helper to validate JWT and return username
+function authenticateRequest(request: NextRequest): { username: string } | NextResponse {
+    const authHeader = request.headers.get('authorization');
+    const payload = validateJWT(authHeader);
+
+    if (!payload) {
+        return NextResponse.json(
+            { error: 'Unauthorized. Please log in again.' },
+            { status: 401, headers: securityHeaders }
+        );
+    }
+
+    return { username: payload.username };
+}
 
 // Toggle monitoring status for a repository
 export async function POST(request: NextRequest) {
     try {
-        const username = request.headers.get('x-github-username');
-        const { owner, repo, isActive } = await request.json();
+        const auth = authenticateRequest(request);
+        if (auth instanceof NextResponse) return auth;
+        const { username } = auth;
 
-        if (!username) {
-            return NextResponse.json(
-                { error: 'Username header required' },
-                { status: 400, headers: securityHeaders }
-            );
-        }
+        const { owner, repo, isActive } = await request.json();
 
         // Rate limiting
         const rateLimit = checkRateLimit(username);
@@ -36,7 +48,7 @@ export async function POST(request: NextRequest) {
         }
 
         await dbConnect();
-        const user = await User.findOne({ githubUsername: sanitizeInput(username) });
+        const user = await User.findOne({ githubUsername: username });
 
         if (!user) {
             return NextResponse.json(
@@ -75,14 +87,9 @@ export async function POST(request: NextRequest) {
 // GET - Get monitoring status for all repos
 export async function GET(request: NextRequest) {
     try {
-        const username = request.headers.get('x-github-username');
-
-        if (!username) {
-            return NextResponse.json(
-                { error: 'Username header required' },
-                { status: 400, headers: securityHeaders }
-            );
-        }
+        const auth = authenticateRequest(request);
+        if (auth instanceof NextResponse) return auth;
+        const { username } = auth;
 
         // Rate limiting
         const rateLimit = checkRateLimit(username);
@@ -94,7 +101,7 @@ export async function GET(request: NextRequest) {
         }
 
         await dbConnect();
-        const user = await User.findOne({ githubUsername: sanitizeInput(username) });
+        const user = await User.findOne({ githubUsername: username });
 
         if (!user) {
             return NextResponse.json(

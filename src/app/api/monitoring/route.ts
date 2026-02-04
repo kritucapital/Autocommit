@@ -1,19 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
-import { securityHeaders, sanitizeInput } from '@/lib/security';
+import { securityHeaders } from '@/lib/security';
+import { validateJWT } from '@/lib/jwt';
+
+// Helper to validate JWT and return username
+function authenticateRequest(request: NextRequest): { username: string } | NextResponse {
+    const authHeader = request.headers.get('authorization');
+    const payload = validateJWT(authHeader);
+
+    if (!payload) {
+        return NextResponse.json(
+            { error: 'Unauthorized. Please log in again.' },
+            { status: 401, headers: securityHeaders }
+        );
+    }
+
+    return { username: payload.username };
+}
 
 // Toggle monitoring for a user (enable/disable background service)
 export async function POST(request: NextRequest) {
     try {
-        const username = request.headers.get('x-github-username');
-
-        if (!username) {
-            return NextResponse.json(
-                { error: 'Username header required' },
-                { status: 400, headers: securityHeaders }
-            );
-        }
+        const auth = authenticateRequest(request);
+        if (auth instanceof NextResponse) return auth;
+        const { username } = auth;
 
         const body = await request.json();
         const { enabled, pollInterval } = body;
@@ -26,7 +37,7 @@ export async function POST(request: NextRequest) {
         }
 
         await dbConnect();
-        const user = await User.findOne({ githubUsername: sanitizeInput(username) });
+        const user = await User.findOne({ githubUsername: username });
 
         if (!user) {
             return NextResponse.json(
@@ -68,17 +79,12 @@ export async function POST(request: NextRequest) {
 // Get current monitoring status
 export async function GET(request: NextRequest) {
     try {
-        const username = request.headers.get('x-github-username');
-
-        if (!username) {
-            return NextResponse.json(
-                { error: 'Username header required' },
-                { status: 400, headers: securityHeaders }
-            );
-        }
+        const auth = authenticateRequest(request);
+        if (auth instanceof NextResponse) return auth;
+        const { username } = auth;
 
         await dbConnect();
-        const user = await User.findOne({ githubUsername: sanitizeInput(username) });
+        const user = await User.findOne({ githubUsername: username });
 
         if (!user) {
             return NextResponse.json(
