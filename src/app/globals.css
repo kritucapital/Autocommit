@@ -1020,6 +1020,12 @@ h3 {
 
 /* Responsive Navigation */
 @media (max-width: 768px) {
+
+  /* Hide the blue gradient glow on mobile */
+  .gradient-bg::before {
+    display: none;
+  }
+
   .user-info {
     display: none !important;
   }
