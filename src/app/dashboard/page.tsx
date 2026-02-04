@@ -621,32 +621,80 @@ export default function Dashboard() {
                 <AnimatePresence>
                     {isMobileMenuOpen && (
                         <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
                             className="mobile-menu"
                             style={{
-                                borderTop: '1px solid var(--border)',
-                                padding: '1rem',
+                                background: 'rgba(15, 23, 42, 0.98)',
+                                backdropFilter: 'blur(20px)',
+                                borderTop: '1px solid rgba(56, 189, 248, 0.15)',
+                                padding: '1.25rem',
                             }}
                         >
                             <div className="container">
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.2, delay: 0.05 }}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '1rem',
+                                        marginBottom: '1.25rem',
+                                        padding: '0.75rem',
+                                        background: 'rgba(255, 255, 255, 0.03)',
+                                        borderRadius: '0.75rem',
+                                    }}
+                                >
                                     {avatarUrl && (
-                                        <img src={avatarUrl} alt={username || ''} className="avatar" />
+                                        <img src={avatarUrl} alt={username || ''} className="avatar" style={{ width: '40px', height: '40px' }} />
                                     )}
-                                    <span style={{ color: 'var(--text-secondary)' }}>@{username}</span>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <div>
+                                        <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>@{username}</span>
+                                    </div>
+                                </motion.div>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.2, delay: 0.1 }}
+                                    style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
+                                >
                                     <button
                                         onClick={() => {
                                             setIsMobileMenuOpen(false);
                                             setIsSettingsOpen(true);
                                         }}
-                                        className="btn btn-secondary"
-                                        style={{ justifyContent: 'flex-start' }}
+                                        className="dropdown-item"
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.75rem',
+                                            padding: '0.875rem 1rem',
+                                            background: 'transparent',
+                                            border: 'none',
+                                            borderRadius: '0.75rem',
+                                            cursor: 'pointer',
+                                            color: 'var(--text-primary)',
+                                            fontSize: '0.95rem',
+                                            fontWeight: 500,
+                                            width: '100%',
+                                            textAlign: 'left',
+                                        }}
                                     >
-                                        <Settings size={18} />
+                                        <div style={{
+                                            width: '36px',
+                                            height: '36px',
+                                            borderRadius: '0.5rem',
+                                            background: 'rgba(14, 165, 233, 0.15)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: 'var(--accent-secondary)',
+                                        }}>
+                                            <Settings size={18} />
+                                        </div>
                                         Settings
                                     </button>
                                     <button
@@ -654,13 +702,37 @@ export default function Dashboard() {
                                             setIsMobileMenuOpen(false);
                                             handleLogout();
                                         }}
-                                        className="btn btn-danger"
-                                        style={{ justifyContent: 'flex-start' }}
+                                        className="dropdown-item"
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.75rem',
+                                            padding: '0.875rem 1rem',
+                                            background: 'transparent',
+                                            border: 'none',
+                                            borderRadius: '0.75rem',
+                                            cursor: 'pointer',
+                                            color: 'var(--error)',
+                                            fontSize: '0.95rem',
+                                            fontWeight: 500,
+                                            width: '100%',
+                                            textAlign: 'left',
+                                        }}
                                     >
-                                        <LogOut size={18} />
+                                        <div style={{
+                                            width: '36px',
+                                            height: '36px',
+                                            borderRadius: '0.5rem',
+                                            background: 'rgba(239, 68, 68, 0.15)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                        }}>
+                                            <LogOut size={18} />
+                                        </div>
                                         Logout
                                     </button>
-                                </div>
+                                </motion.div>
                             </div>
                         </motion.div>
                     )}
