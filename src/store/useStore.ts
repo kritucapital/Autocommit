@@ -23,16 +23,16 @@ export interface ActivityLog {
 
 interface UserState {
     isAuthenticated: boolean;
+    email: string | null;
     username: string | null;
     avatarUrl: string | null;
-    token: string | null;
     repositories: Repository[];
     activityLog: ActivityLog[];
     isPolling: boolean;
     pollInterval: number;
 
     // Actions
-    setUser: (username: string, avatarUrl: string, token: string) => void;
+    setUser: (email: string, username: string, avatarUrl: string) => void;
     logout: () => void;
     setRepositories: (repos: Repository[]) => void;
     addRepository: (repo: Repository) => void;
@@ -46,30 +46,30 @@ interface UserState {
 
 export const useStore = create<UserState>()(
     persist(
-        (set, get) => ({
+        (set) => ({
             isAuthenticated: false,
+            email: null,
             username: null,
             avatarUrl: null,
-            token: null,
             repositories: [],
             activityLog: [],
             isPolling: false,
             pollInterval: 30000, // 30 seconds default
 
-            setUser: (username, avatarUrl, token) =>
+            setUser: (email, username, avatarUrl) =>
                 set({
                     isAuthenticated: true,
+                    email,
                     username,
                     avatarUrl,
-                    token,
                 }),
 
             logout: () =>
                 set({
                     isAuthenticated: false,
+                    email: null,
                     username: null,
                     avatarUrl: null,
-                    token: null,
                     repositories: [],
                     activityLog: [],
                     isPolling: false,
@@ -116,9 +116,9 @@ export const useStore = create<UserState>()(
             name: 'autocommit-storage',
             partialize: (state) => ({
                 isAuthenticated: state.isAuthenticated,
+                email: state.email,
                 username: state.username,
                 avatarUrl: state.avatarUrl,
-                token: state.token,
                 pollInterval: state.pollInterval,
                 isPolling: state.isPolling,
             }),

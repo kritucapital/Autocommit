@@ -12,6 +12,8 @@ export interface IRepository {
 }
 
 export interface IUser extends Document {
+    email: string;
+    password: string; // bcrypt hashed
     githubToken: string;
     githubUsername: string;
     githubId: number;
@@ -36,6 +38,8 @@ const RepositorySchema = new Schema<IRepository>({
 
 const UserSchema = new Schema<IUser>(
     {
+        email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+        password: { type: String, required: true },
         githubToken: { type: String, required: true },
         githubUsername: { type: String, required: true, unique: true },
         githubId: { type: Number, required: true },

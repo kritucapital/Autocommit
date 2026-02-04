@@ -29,7 +29,6 @@ export default function Dashboard() {
         isAuthenticated,
         username,
         avatarUrl,
-        token,
         repositories,
         activityLog,
         isPolling,
