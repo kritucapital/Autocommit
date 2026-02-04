@@ -503,20 +503,22 @@ export default function Dashboard() {
                                         onClick={() => setIsUserDropdownOpen(false)}
                                     />
                                     <motion.div
-                                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                                        transition={{ duration: 0.15 }}
+                                        exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                                        transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                                        className="user-dropdown"
                                         style={{
                                             position: 'absolute',
-                                            top: 'calc(100% + 0.5rem)',
+                                            top: 'calc(100% + 0.75rem)',
                                             right: 0,
-                                            background: 'var(--bg-card)',
-                                            border: '1px solid var(--border)',
-                                            borderRadius: '0.75rem',
-                                            padding: '0.5rem',
-                                            minWidth: '180px',
-                                            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+                                            background: 'rgba(15, 23, 42, 0.95)',
+                                            backdropFilter: 'blur(20px)',
+                                            border: '1px solid rgba(56, 189, 248, 0.2)',
+                                            borderRadius: '1rem',
+                                            padding: '0.75rem',
+                                            minWidth: '200px',
+                                            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4), 0 0 40px rgba(14, 165, 233, 0.1)',
                                             zIndex: 100,
                                         }}
                                     >
@@ -525,48 +527,71 @@ export default function Dashboard() {
                                                 setIsUserDropdownOpen(false);
                                                 setIsSettingsOpen(true);
                                             }}
+                                            className="dropdown-item"
                                             style={{
                                                 width: '100%',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 gap: '0.75rem',
-                                                padding: '0.75rem 1rem',
-                                                background: 'none',
+                                                padding: '0.875rem 1rem',
+                                                background: 'transparent',
                                                 border: 'none',
-                                                borderRadius: '0.5rem',
+                                                borderRadius: '0.75rem',
                                                 cursor: 'pointer',
                                                 color: 'var(--text-primary)',
-                                                fontSize: '0.9rem',
-                                                transition: 'background 0.15s',
+                                                fontSize: '0.95rem',
+                                                fontWeight: 500,
+                                                transition: 'all 0.2s ease',
                                             }}
-                                            className="dropdown-item"
                                         >
-                                            <Settings size={18} />
+                                            <div style={{
+                                                width: '32px',
+                                                height: '32px',
+                                                borderRadius: '0.5rem',
+                                                background: 'rgba(14, 165, 233, 0.15)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: 'var(--accent-secondary)',
+                                            }}>
+                                                <Settings size={16} />
+                                            </div>
                                             Settings
                                         </button>
-                                        <div style={{ height: '1px', background: 'var(--border)', margin: '0.25rem 0' }} />
+                                        <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '0.5rem 0' }} />
                                         <button
                                             onClick={() => {
                                                 setIsUserDropdownOpen(false);
                                                 handleLogout();
                                             }}
+                                            className="dropdown-item"
                                             style={{
                                                 width: '100%',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 gap: '0.75rem',
-                                                padding: '0.75rem 1rem',
-                                                background: 'none',
+                                                padding: '0.875rem 1rem',
+                                                background: 'transparent',
                                                 border: 'none',
-                                                borderRadius: '0.5rem',
+                                                borderRadius: '0.75rem',
                                                 cursor: 'pointer',
                                                 color: 'var(--error)',
-                                                fontSize: '0.9rem',
-                                                transition: 'background 0.15s',
+                                                fontSize: '0.95rem',
+                                                fontWeight: 500,
+                                                transition: 'all 0.2s ease',
                                             }}
-                                            className="dropdown-item"
                                         >
-                                            <LogOut size={18} />
+                                            <div style={{
+                                                width: '32px',
+                                                height: '32px',
+                                                borderRadius: '0.5rem',
+                                                background: 'rgba(239, 68, 68, 0.15)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                            }}>
+                                                <LogOut size={16} />
+                                            </div>
                                             Logout
                                         </button>
                                     </motion.div>
@@ -665,12 +690,6 @@ export default function Dashboard() {
                                     <span>Background Service Active</span>
                                 </span>
                             )}
-                            <button
-                                onClick={() => setIsSettingsOpen(true)}
-                                className="btn btn-secondary btn-sm"
-                            >
-                                <Settings size={18} />
-                            </button>
                             <button
                                 onClick={handleToggleBackgroundMonitoring}
                                 className={`btn ${isBackgroundMonitoringEnabled ? 'btn-danger' : 'btn-primary'}`}

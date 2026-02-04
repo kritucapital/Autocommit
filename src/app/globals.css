@@ -980,11 +980,32 @@ h3 {
 
 /* Dropdown hover effects */
 .dropdown-item:hover {
-  background: var(--bg-secondary) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  transform: translateX(4px);
+}
+
+.dropdown-item:active {
+  transform: scale(0.98) translateX(4px);
 }
 
 .user-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.user-dropdown {
+  animation: dropdownSlide 0.2s ease;
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Mobile menu styles */
