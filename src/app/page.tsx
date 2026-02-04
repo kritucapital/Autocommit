@@ -33,7 +33,7 @@ export default function Home() {
                         </div>
                         <span>AutoCommit</span>
                     </Link>
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <div className="nav-buttons" style={{ display: 'flex', gap: '0.75rem' }}>
                         <Link href="/auth" className="btn btn-secondary btn-sm">
                             <LogIn size={18} />
                             <span>Login</span>
@@ -77,7 +77,6 @@ export default function Home() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6, delay: 0.2 }}
-                            style={{ fontSize: '1.2rem', maxWidth: '550px', margin: '0 auto 2rem' }}
                         >
                             AutoCommit monitors your repositories and automatically updates your README
                             when collaborators push changes. Stay active with zero effort.
@@ -85,6 +84,7 @@ export default function Home() {
 
                         {/* CTA Buttons */}
                         <motion.div
+                            className="cta-buttons"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6, delay: 0.3 }}
@@ -97,19 +97,17 @@ export default function Home() {
                         >
                             <Link
                                 href="/auth?mode=signup"
-                                className="btn btn-primary"
-                                style={{ padding: '1rem 2rem', fontSize: '1.1rem' }}
+                                className="btn btn-primary cta-btn"
                             >
-                                <UserPlus size={22} />
+                                <UserPlus size={20} />
                                 <span>New User? Sign Up</span>
-                                <ArrowRight size={20} />
+                                <ArrowRight size={18} />
                             </Link>
                             <Link
                                 href="/auth"
-                                className="btn btn-secondary"
-                                style={{ padding: '1rem 2rem', fontSize: '1.1rem' }}
+                                className="btn btn-secondary cta-btn"
                             >
-                                <LogIn size={22} />
+                                <LogIn size={20} />
                                 <span>Already a User? Login</span>
                             </Link>
                         </motion.div>
@@ -151,11 +149,11 @@ export default function Home() {
                         transition={{ duration: 0.8, delay: 0.7 }}
                         style={{ marginTop: '4rem', textAlign: 'center' }}
                     >
-                        <h2 style={{ marginBottom: '2rem' }}>How It Works</h2>
-                        <div style={{
+                        <h2 style={{ marginBottom: '2rem', fontSize: 'clamp(1.25rem, 4vw, 1.75rem)' }}>How It Works</h2>
+                        <div className="how-it-works-grid" style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                            gap: '2rem',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                            gap: '1.5rem',
                             maxWidth: '800px',
                             margin: '0 auto',
                         }}>
