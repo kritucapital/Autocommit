@@ -20,6 +20,7 @@ import {
     Pause,
     Settings,
     Server,
+    AlertTriangle,
 } from 'lucide-react';
 import { useStore, Repository, ActivityLog } from '@/store/useStore';
 
@@ -27,6 +28,7 @@ export default function Dashboard() {
     const router = useRouter();
     const {
         isAuthenticated,
+        email,
         username,
         avatarUrl,
         repositories,
@@ -63,6 +65,12 @@ export default function Dashboard() {
     const [repoSearchQuery, setRepoSearchQuery] = useState('');
     const [isFetchingRepos, setIsFetchingRepos] = useState(false);
     const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Delete account states
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deletePassword, setDeletePassword] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState('');
 
     // Redirect if not authenticated, fetch data when authenticated and username is ready
     useEffect(() => {
@@ -371,6 +379,40 @@ export default function Dashboard() {
     const handleLogout = () => {
         logout();
         router.push('/');
+    };
+
+    // Handle delete account
+    const handleDeleteAccount = async () => {
+        if (!email || !deletePassword) {
+            setDeleteError('Password is required');
+            return;
+        }
+
+        setIsDeleting(true);
+        setDeleteError('');
+
+        try {
+            const response = await fetch('/api/auth/delete', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password: deletePassword }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setDeleteError(data.error || 'Failed to delete account');
+                return;
+            }
+
+            // Successfully deleted - logout and redirect
+            logout();
+            router.push('/');
+        } catch {
+            setDeleteError('Something went wrong. Please try again.');
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     // Format time ago
@@ -855,6 +897,148 @@ export default function Dashboard() {
                             >
                                 Save Settings
                             </button>
+
+                            {/* Danger Zone */}
+                            <div style={{
+                                marginTop: '2rem',
+                                paddingTop: '1.5rem',
+                                borderTop: '1px solid var(--border)'
+                            }}>
+                                <h3 style={{
+                                    color: 'var(--error)',
+                                    fontSize: '0.9rem',
+                                    marginBottom: '0.75rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                }}>
+                                    <AlertTriangle size={16} />
+                                    Danger Zone
+                                </h3>
+                                <button
+                                    onClick={() => {
+                                        setIsSettingsOpen(false);
+                                        setIsDeleteModalOpen(true);
+                                    }}
+                                    className="btn btn-danger"
+                                    style={{ width: '100%' }}
+                                >
+                                    <Trash2 size={18} />
+                                    Delete Account
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Delete Account Confirmation Modal */}
+            <AnimatePresence>
+                {isDeleteModalOpen && (
+                    <motion.div
+                        className="modal-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => {
+                            setIsDeleteModalOpen(false);
+                            setDeletePassword('');
+                            setDeleteError('');
+                        }}
+                    >
+                        <motion.div
+                            className="modal"
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="modal-header">
+                                <h2 style={{ color: 'var(--error)' }}>Delete Account</h2>
+                                <button
+                                    className="modal-close"
+                                    onClick={() => {
+                                        setIsDeleteModalOpen(false);
+                                        setDeletePassword('');
+                                        setDeleteError('');
+                                    }}
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
+
+                            <div style={{
+                                background: 'rgba(239, 68, 68, 0.1)',
+                                border: '1px solid var(--error)',
+                                borderRadius: '0.75rem',
+                                padding: '1rem',
+                                marginBottom: '1.5rem',
+                            }}>
+                                <p style={{
+                                    color: 'var(--error)',
+                                    fontSize: '0.9rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                }}>
+                                    <AlertTriangle size={18} />
+                                    This action cannot be undone!
+                                </p>
+                                <p style={{
+                                    color: 'var(--text-muted)',
+                                    fontSize: '0.85rem',
+                                    marginTop: '0.5rem',
+                                }}>
+                                    All your data, repositories, and monitoring settings will be permanently deleted.
+                                </p>
+                            </div>
+
+                            <div className="input-group">
+                                <label htmlFor="delete-password">Enter your password to confirm</label>
+                                <input
+                                    id="delete-password"
+                                    type="password"
+                                    className={`input ${deleteError ? 'input-error' : ''}`}
+                                    placeholder="••••••••"
+                                    value={deletePassword}
+                                    onChange={(e) => setDeletePassword(e.target.value)}
+                                    disabled={isDeleting}
+                                />
+                                {deleteError && <p className="error-message">{deleteError}</p>}
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                <button
+                                    onClick={() => {
+                                        setIsDeleteModalOpen(false);
+                                        setDeletePassword('');
+                                        setDeleteError('');
+                                    }}
+                                    className="btn btn-secondary"
+                                    style={{ flex: 1 }}
+                                    disabled={isDeleting}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleDeleteAccount}
+                                    className="btn btn-danger"
+                                    style={{ flex: 1 }}
+                                    disabled={isDeleting || !deletePassword}
+                                >
+                                    {isDeleting ? (
+                                        <>
+                                            <Loader2 size={18} className="spinner" />
+                                            <span>Deleting...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Trash2 size={18} />
+                                            <span>Delete Forever</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}
