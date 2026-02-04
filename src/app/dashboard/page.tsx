@@ -21,6 +21,8 @@ import {
     Settings,
     Server,
     AlertTriangle,
+    Menu,
+    ChevronDown,
 } from 'lucide-react';
 import { useStore, Repository, ActivityLog } from '@/store/useStore';
 
@@ -71,6 +73,10 @@ export default function Dashboard() {
     const [deletePassword, setDeletePassword] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState('');
+
+    // Navigation states
+    const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Redirect if not authenticated, fetch data when authenticated and username is ready
     useEffect(() => {
@@ -451,16 +457,189 @@ export default function Dashboard() {
                         </div>
                         <span>AutoCommit</span>
                     </a>
-                    <div className="user-info">
-                        {avatarUrl && (
-                            <img src={avatarUrl} alt={username || ''} className="avatar" />
-                        )}
-                        <span style={{ color: 'var(--text-secondary)' }}>@{username}</span>
-                        <button onClick={handleLogout} className="btn btn-secondary btn-sm">
-                            <LogOut size={18} />
+
+                    {/* Desktop User Menu */}
+                    <div className="user-info" style={{ position: 'relative' }}>
+                        <button
+                            onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.75rem',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '0.5rem',
+                                borderRadius: '0.5rem',
+                                transition: 'background 0.2s',
+                            }}
+                            className="user-menu-btn"
+                        >
+                            {avatarUrl && (
+                                <img src={avatarUrl} alt={username || ''} className="avatar" />
+                            )}
+                            <span style={{ color: 'var(--text-secondary)' }}>@{username}</span>
+                            <ChevronDown
+                                size={18}
+                                style={{
+                                    color: 'var(--text-muted)',
+                                    transform: isUserDropdownOpen ? 'rotate(180deg)' : 'rotate(0)',
+                                    transition: 'transform 0.2s',
+                                }}
+                            />
                         </button>
+
+                        {/* User Dropdown */}
+                        <AnimatePresence>
+                            {isUserDropdownOpen && (
+                                <>
+                                    {/* Backdrop */}
+                                    <div
+                                        style={{
+                                            position: 'fixed',
+                                            inset: 0,
+                                            zIndex: 90,
+                                        }}
+                                        onClick={() => setIsUserDropdownOpen(false)}
+                                    />
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                        transition={{ duration: 0.15 }}
+                                        style={{
+                                            position: 'absolute',
+                                            top: 'calc(100% + 0.5rem)',
+                                            right: 0,
+                                            background: 'var(--bg-card)',
+                                            border: '1px solid var(--border)',
+                                            borderRadius: '0.75rem',
+                                            padding: '0.5rem',
+                                            minWidth: '180px',
+                                            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+                                            zIndex: 100,
+                                        }}
+                                    >
+                                        <button
+                                            onClick={() => {
+                                                setIsUserDropdownOpen(false);
+                                                setIsSettingsOpen(true);
+                                            }}
+                                            style={{
+                                                width: '100%',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.75rem',
+                                                padding: '0.75rem 1rem',
+                                                background: 'none',
+                                                border: 'none',
+                                                borderRadius: '0.5rem',
+                                                cursor: 'pointer',
+                                                color: 'var(--text-primary)',
+                                                fontSize: '0.9rem',
+                                                transition: 'background 0.15s',
+                                            }}
+                                            className="dropdown-item"
+                                        >
+                                            <Settings size={18} />
+                                            Settings
+                                        </button>
+                                        <div style={{ height: '1px', background: 'var(--border)', margin: '0.25rem 0' }} />
+                                        <button
+                                            onClick={() => {
+                                                setIsUserDropdownOpen(false);
+                                                handleLogout();
+                                            }}
+                                            style={{
+                                                width: '100%',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.75rem',
+                                                padding: '0.75rem 1rem',
+                                                background: 'none',
+                                                border: 'none',
+                                                borderRadius: '0.5rem',
+                                                cursor: 'pointer',
+                                                color: 'var(--error)',
+                                                fontSize: '0.9rem',
+                                                transition: 'background 0.15s',
+                                            }}
+                                            className="dropdown-item"
+                                        >
+                                            <LogOut size={18} />
+                                            Logout
+                                        </button>
+                                    </motion.div>
+                                </>
+                            )}
+                        </AnimatePresence>
                     </div>
+
+                    {/* Mobile Hamburger Button */}
+                    <button
+                        className="mobile-menu-btn"
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        style={{
+                            display: 'none',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: 'var(--text-primary)',
+                            padding: '0.5rem',
+                        }}
+                    >
+                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
                 </div>
+
+                {/* Mobile Menu */}
+                <AnimatePresence>
+                    {isMobileMenuOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mobile-menu"
+                            style={{
+                                borderTop: '1px solid var(--border)',
+                                padding: '1rem',
+                            }}
+                        >
+                            <div className="container">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                                    {avatarUrl && (
+                                        <img src={avatarUrl} alt={username || ''} className="avatar" />
+                                    )}
+                                    <span style={{ color: 'var(--text-secondary)' }}>@{username}</span>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <button
+                                        onClick={() => {
+                                            setIsMobileMenuOpen(false);
+                                            setIsSettingsOpen(true);
+                                        }}
+                                        className="btn btn-secondary"
+                                        style={{ justifyContent: 'flex-start' }}
+                                    >
+                                        <Settings size={18} />
+                                        Settings
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setIsMobileMenuOpen(false);
+                                            handleLogout();
+                                        }}
+                                        className="btn btn-danger"
+                                        style={{ justifyContent: 'flex-start' }}
+                                    >
+                                        <LogOut size={18} />
+                                        Logout
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </nav>
 
             {/* Dashboard Content */}

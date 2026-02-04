@@ -1,23 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { GitCommit, Zap, Shield, Clock, Github, ArrowRight, Loader2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { GitCommit, Zap, Shield, Clock, Github, ArrowRight, UserPlus, LogIn, Check } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-
-type AuthMode = 'login' | 'signup';
+import Link from 'next/link';
 
 export default function Home() {
-    const [authMode, setAuthMode] = useState<AuthMode>('login');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [token, setToken] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
-    const { setUser, isAuthenticated } = useStore();
+    const { isAuthenticated } = useStore();
 
     // Redirect if already authenticated
     useEffect(() => {
@@ -26,324 +18,100 @@ export default function Home() {
         }
     }, [isAuthenticated, router]);
 
-    // Show nothing while redirecting
     if (isAuthenticated) {
         return null;
     }
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-
-        if (!email.trim() || !password.trim()) {
-            setError('Please fill in all fields');
-            return;
-        }
-
-        if (authMode === 'signup' && !token.trim()) {
-            setError('GitHub token is required for signup');
-            return;
-        }
-
-        setIsLoading(true);
-
-        try {
-            const endpoint = authMode === 'login' ? '/api/auth/login' : '/api/auth/signup';
-            const body = authMode === 'login'
-                ? { email, password }
-                : { email, password, token };
-
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                setError(data.error || 'Authentication failed');
-                return;
-            }
-
-            setUser(data.user.email, data.user.username, data.user.avatarUrl);
-            router.push('/dashboard');
-        } catch {
-            setError('Something went wrong. Please try again.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const switchMode = () => {
-        setAuthMode(authMode === 'login' ? 'signup' : 'login');
-        setError('');
-        setToken('');
-    };
 
     return (
         <>
             {/* Navbar */}
             <nav className="navbar">
                 <div className="container navbar-content">
-                    <a href="/" className="logo">
+                    <Link href="/" className="logo">
                         <div className="logo-icon">
                             <GitCommit size={24} color="white" />
                         </div>
                         <span>AutoCommit</span>
-                    </a>
-                    <a
-                        href="https://github.com/settings/tokens/new"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-secondary btn-sm"
-                    >
-                        <Github size={18} />
-                        <span>Get Token</span>
-                    </a>
+                    </Link>
+                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <Link href="/auth" className="btn btn-secondary btn-sm">
+                            <LogIn size={18} />
+                            <span>Login</span>
+                        </Link>
+                        <Link href="/auth?mode=signup" className="btn btn-primary btn-sm">
+                            <UserPlus size={18} />
+                            <span>Sign Up</span>
+                        </Link>
+                    </div>
                 </div>
             </nav>
 
             {/* Hero Section */}
             <section className="hero">
                 <div className="container">
-                    <div className="hero-content">
+                    <div className="hero-content" style={{ maxWidth: '700px' }}>
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6 }}
+                            style={{ marginBottom: '1rem' }}
+                        >
+                            <span className="badge badge-info" style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}>
+                                <Zap size={14} />
+                                Automated Commit Tracking
+                            </span>
+                        </motion.div>
+
                         <motion.h1
                             className="hero-title"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6 }}
+                            transition={{ duration: 0.6, delay: 0.1 }}
+                            style={{ fontSize: 'clamp(2.5rem, 6vw, 3.5rem)' }}
                         >
                             Never Miss a <span>Commit</span> Again
                         </motion.h1>
+
                         <motion.p
                             className="hero-description"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.1 }}
+                            transition={{ duration: 0.6, delay: 0.2 }}
+                            style={{ fontSize: '1.2rem', maxWidth: '550px', margin: '0 auto 2rem' }}
                         >
-                            AutoCommit automatically updates your README whenever a collaborator
-                            pushes to your repository. Stay active and engaged with minimal effort.
+                            AutoCommit monitors your repositories and automatically updates your README
+                            when collaborators push changes. Stay active with zero effort.
                         </motion.p>
 
-                        {/* Auth Form */}
+                        {/* CTA Buttons */}
                         <motion.div
-                            className="card"
-                            style={{
-                                padding: '2rem',
-                                maxWidth: '400px',
-                                margin: '0 auto',
-                                background: 'rgba(15, 23, 42, 0.8)',
-                                backdropFilter: 'blur(10px)',
-                            }}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                        >
-                            {/* Auth Tabs */}
-                            <div style={{
+                            transition={{ duration: 0.6, delay: 0.3 }}
+                            style={{
                                 display: 'flex',
-                                marginBottom: '1.5rem',
-                                borderRadius: '8px',
-                                background: 'var(--bg-secondary)',
-                                padding: '4px',
-                            }}>
-                                <button
-                                    type="button"
-                                    onClick={() => { setAuthMode('login'); setError(''); }}
-                                    style={{
-                                        flex: 1,
-                                        padding: '0.75rem',
-                                        border: 'none',
-                                        borderRadius: '6px',
-                                        cursor: 'pointer',
-                                        fontWeight: 500,
-                                        transition: 'all 0.2s',
-                                        background: authMode === 'login' ? 'var(--accent-primary)' : 'transparent',
-                                        color: authMode === 'login' ? 'white' : 'var(--text-secondary)',
-                                    }}
-                                >
-                                    Login
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => { setAuthMode('signup'); setError(''); }}
-                                    style={{
-                                        flex: 1,
-                                        padding: '0.75rem',
-                                        border: 'none',
-                                        borderRadius: '6px',
-                                        cursor: 'pointer',
-                                        fontWeight: 500,
-                                        transition: 'all 0.2s',
-                                        background: authMode === 'signup' ? 'var(--accent-primary)' : 'transparent',
-                                        color: authMode === 'signup' ? 'white' : 'var(--text-secondary)',
-                                    }}
-                                >
-                                    Sign Up
-                                </button>
-                            </div>
-
-                            <form onSubmit={handleSubmit}>
-                                {/* Email Field */}
-                                <div className="input-group">
-                                    <label htmlFor="email">
-                                        <Mail size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
-                                        Email
-                                    </label>
-                                    <input
-                                        id="email"
-                                        type="email"
-                                        className={`input ${error ? 'input-error' : ''}`}
-                                        placeholder="you@example.com"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        disabled={isLoading}
-                                        autoComplete="email"
-                                    />
-                                </div>
-
-                                {/* Password Field */}
-                                <div className="input-group">
-                                    <label htmlFor="password">
-                                        <Lock size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
-                                        Password
-                                    </label>
-                                    <div style={{ position: 'relative' }}>
-                                        <input
-                                            id="password"
-                                            type={showPassword ? 'text' : 'password'}
-                                            className={`input ${error ? 'input-error' : ''}`}
-                                            placeholder="••••••••"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            disabled={isLoading}
-                                            autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
-                                            style={{ paddingRight: '3rem' }}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            style={{
-                                                position: 'absolute',
-                                                right: '12px',
-                                                top: '50%',
-                                                transform: 'translateY(-50%)',
-                                                background: 'none',
-                                                border: 'none',
-                                                cursor: 'pointer',
-                                                color: 'var(--text-muted)',
-                                                padding: '4px',
-                                            }}
-                                        >
-                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* GitHub Token (only for signup) */}
-                                {authMode === 'signup' && (
-                                    <motion.div
-                                        className="input-group"
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <label htmlFor="token">
-                                            <Github size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
-                                            GitHub Personal Access Token
-                                        </label>
-                                        <input
-                                            id="token"
-                                            type="password"
-                                            className="input"
-                                            placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                                            value={token}
-                                            onChange={(e) => setToken(e.target.value)}
-                                            disabled={isLoading}
-                                        />
-                                        <p style={{
-                                            fontSize: '0.75rem',
-                                            color: 'var(--text-muted)',
-                                            marginTop: '0.5rem'
-                                        }}>
-                                            Token needs <strong>repo</strong> scope.
-                                            <a
-                                                href="https://github.com/settings/tokens/new"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                style={{ color: 'var(--accent-primary)', marginLeft: '0.25rem' }}
-                                            >
-                                                Create one here
-                                            </a>
-                                        </p>
-                                    </motion.div>
-                                )}
-
-                                {error && <p className="error-message">{error}</p>}
-
-                                <button
-                                    type="submit"
-                                    className="btn btn-primary"
-                                    disabled={isLoading}
-                                    style={{ width: '100%', marginTop: '1rem' }}
-                                >
-                                    {isLoading ? (
-                                        <>
-                                            <Loader2 size={20} className="spinner" />
-                                            <span>{authMode === 'login' ? 'Logging in...' : 'Creating account...'}</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span>{authMode === 'login' ? 'Login' : 'Create Account'}</span>
-                                            <ArrowRight size={20} />
-                                        </>
-                                    )}
-                                </button>
-                            </form>
-
-                            <p style={{
-                                textAlign: 'center',
-                                marginTop: '1rem',
-                                color: 'var(--text-muted)',
-                                fontSize: '0.9rem',
-                            }}>
-                                {authMode === 'login' ? (
-                                    <>
-                                        Don&apos;t have an account?{' '}
-                                        <button
-                                            type="button"
-                                            onClick={switchMode}
-                                            style={{
-                                                background: 'none',
-                                                border: 'none',
-                                                color: 'var(--accent-primary)',
-                                                cursor: 'pointer',
-                                                fontWeight: 500,
-                                            }}
-                                        >
-                                            Sign up
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        Already have an account?{' '}
-                                        <button
-                                            type="button"
-                                            onClick={switchMode}
-                                            style={{
-                                                background: 'none',
-                                                border: 'none',
-                                                color: 'var(--accent-primary)',
-                                                cursor: 'pointer',
-                                                fontWeight: 500,
-                                            }}
-                                        >
-                                            Login
-                                        </button>
-                                    </>
-                                )}
-                            </p>
+                                gap: '1rem',
+                                justifyContent: 'center',
+                                flexWrap: 'wrap',
+                            }}
+                        >
+                            <Link
+                                href="/auth?mode=signup"
+                                className="btn btn-primary"
+                                style={{ padding: '1rem 2rem', fontSize: '1.1rem' }}
+                            >
+                                <UserPlus size={22} />
+                                <span>New User? Sign Up</span>
+                                <ArrowRight size={20} />
+                            </Link>
+                            <Link
+                                href="/auth"
+                                className="btn btn-secondary"
+                                style={{ padding: '1rem 2rem', fontSize: '1.1rem' }}
+                            >
+                                <LogIn size={22} />
+                                <span>Already a User? Login</span>
+                            </Link>
                         </motion.div>
                     </div>
 
@@ -352,7 +120,8 @@ export default function Home() {
                         className="features-grid"
                         initial={{ opacity: 0, y: 40 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.4 }}
+                        transition={{ duration: 0.8, delay: 0.5 }}
+                        style={{ marginTop: '4rem' }}
                     >
                         <div className="card feature-card">
                             <div className="feature-icon">
@@ -366,23 +135,93 @@ export default function Home() {
 
                         <div className="card feature-card">
                             <div className="feature-icon">
-                                <Shield size={24} />
-                            </div>
-                            <h3 className="feature-title">Smart Commits</h3>
-                            <p className="feature-description">
-                                Makes subtle README updates that maintain your commit streak without spam.
-                            </p>
-                        </div>
-
-                        <div className="card feature-card">
-                            <div className="feature-icon">
                                 <Clock size={24} />
                             </div>
                             <h3 className="feature-title">Always Active</h3>
                             <p className="feature-description">
-                                Set it and forget it. AutoCommit runs in the background while you focus on what matters.
+                                Background monitoring runs 24/7 even when you're offline or logged out.
                             </p>
                         </div>
+                    </motion.div>
+
+                    {/* How it works */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 40 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.7 }}
+                        style={{ marginTop: '4rem', textAlign: 'center' }}
+                    >
+                        <h2 style={{ marginBottom: '2rem' }}>How It Works</h2>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                            gap: '2rem',
+                            maxWidth: '800px',
+                            margin: '0 auto',
+                        }}>
+                            {[
+                                { step: '1', title: 'Connect GitHub', desc: 'Add your personal access token' },
+                                { step: '2', title: 'Add Repos', desc: 'Select repositories to monitor' },
+                                { step: '3', title: 'Enable Monitoring', desc: 'Turn on background service' },
+                                { step: '4', title: 'Auto Commit', desc: 'We handle the rest automatically' },
+                            ].map((item, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.8 + i * 0.1 }}
+                                    style={{ textAlign: 'center' }}
+                                >
+                                    <div style={{
+                                        width: '48px',
+                                        height: '48px',
+                                        borderRadius: '50%',
+                                        background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        margin: '0 auto 1rem',
+                                        fontSize: '1.25rem',
+                                        fontWeight: 700,
+                                        color: 'white',
+                                    }}>
+                                        {item.step}
+                                    </div>
+                                    <h4 style={{ marginBottom: '0.5rem' }}>{item.title}</h4>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{item.desc}</p>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </motion.div>
+
+                    {/* Get Token Link */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.6, delay: 1 }}
+                        style={{
+                            marginTop: '3rem',
+                            textAlign: 'center',
+                            padding: '1.5rem',
+                            background: 'var(--bg-card)',
+                            borderRadius: '1rem',
+                            maxWidth: '500px',
+                            margin: '3rem auto 0',
+                        }}
+                    >
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                            Need a GitHub Personal Access Token?
+                        </p>
+                        <a
+                            href="https://github.com/settings/tokens/new"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-secondary"
+                        >
+                            <Github size={18} />
+                            <span>Create Token on GitHub</span>
+                            <ArrowRight size={16} />
+                        </a>
                     </motion.div>
                 </div>
             </section>
