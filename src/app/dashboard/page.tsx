@@ -23,6 +23,7 @@ import {
     AlertTriangle,
     Menu,
     ChevronDown,
+    Key,
 } from 'lucide-react';
 import { useStore, Repository, ActivityLog } from '@/store/useStore';
 
@@ -48,6 +49,7 @@ export default function Dashboard() {
         setPolling,
         setPollInterval,
         clearActivityLog,
+        setUser,
     } = useStore();
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -69,6 +71,12 @@ export default function Dashboard() {
     const [repoSearchQuery, setRepoSearchQuery] = useState('');
     const [isFetchingRepos, setIsFetchingRepos] = useState(false);
     const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Replace GitHub token states
+    const [newGithubToken, setNewGithubToken] = useState('');
+    const [isReplacingToken, setIsReplacingToken] = useState(false);
+    const [replaceTokenError, setReplaceTokenError] = useState('');
+    const [replaceTokenSuccess, setReplaceTokenSuccess] = useState('');
 
     // Delete account states
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -460,6 +468,53 @@ export default function Dashboard() {
             setDeleteError('Something went wrong. Please try again.');
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    // Handle replace GitHub token
+    const handleReplaceGitHubToken = async () => {
+        const trimmed = newGithubToken.trim();
+        if (!trimmed) {
+            setReplaceTokenError('Please enter a new GitHub token');
+            return;
+        }
+
+        setIsReplacingToken(true);
+        setReplaceTokenError('');
+        setReplaceTokenSuccess('');
+
+        try {
+            const response = await fetch('/api/auth/update-github-token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...getAuthHeaders(),
+                },
+                body: JSON.stringify({ newToken: trimmed }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setReplaceTokenError(data.error || 'Failed to update token');
+                return;
+            }
+
+            setReplaceTokenSuccess('GitHub token updated successfully.');
+            setNewGithubToken('');
+            if (email && username && data.user?.avatarUrl) {
+                setUser(email, username, data.user.avatarUrl, token ?? undefined);
+            }
+            addActivityLog({
+                repo: 'System',
+                action: 'GitHub Token Updated',
+                message: 'Your GitHub Personal Access Token was replaced successfully.',
+                success: true,
+            });
+        } catch {
+            setReplaceTokenError('Something went wrong. Please try again.');
+        } finally {
+            setIsReplacingToken(false);
         }
     };
 
@@ -1166,7 +1221,12 @@ export default function Dashboard() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={() => setIsSettingsOpen(false)}
+                        onClick={() => {
+                            setIsSettingsOpen(false);
+                            setReplaceTokenError('');
+                            setReplaceTokenSuccess('');
+                            setNewGithubToken('');
+                        }}
                     >
                         <motion.div
                             className="modal"
@@ -1179,9 +1239,93 @@ export default function Dashboard() {
                                 <h2>Settings</h2>
                                 <button
                                     className="modal-close"
-                                    onClick={() => setIsSettingsOpen(false)}
+                                    onClick={() => {
+                                        setIsSettingsOpen(false);
+                                        setReplaceTokenError('');
+                                        setReplaceTokenSuccess('');
+                                        setNewGithubToken('');
+                                    }}
                                 >
                                     <X size={24} />
+                                </button>
+                            </div>
+                            {/* GitHub Token Section */}
+                            <div style={{
+                                marginBottom: '1.5rem',
+                                padding: '1rem',
+                                background: 'rgba(255, 255, 255, 0.03)',
+                                borderRadius: '0.75rem',
+                                border: '1px solid var(--border)',
+                            }}>
+                                <h3 style={{
+                                    fontSize: '0.9rem',
+                                    fontWeight: 600,
+                                    color: 'var(--text-primary)',
+                                    marginBottom: '0.75rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                }}>
+                                    <Key size={16} style={{ color: 'var(--accent-secondary)' }} />
+                                    GitHub Token
+                                </h3>
+                                <p style={{
+                                    color: 'var(--text-muted)',
+                                    fontSize: '0.85rem',
+                                    marginBottom: '0.75rem',
+                                }}>
+                                    Replace your GitHub Personal Access Token if it has expired or been revoked.
+                                </p>
+                                <a
+                                    href="https://github.com/settings/tokens/new?scopes=repo"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        color: 'var(--accent-secondary)',
+                                        fontSize: '0.85rem',
+                                        marginBottom: '0.75rem',
+                                        display: 'inline-block',
+                                    }}
+                                >
+                                    Create new token on GitHub →
+                                </a>
+                                <input
+                                    type="password"
+                                    className="input"
+                                    placeholder="Paste your new token here (ghp_...)"
+                                    value={newGithubToken}
+                                    onChange={(e) => {
+                                        setNewGithubToken(e.target.value);
+                                        setReplaceTokenError('');
+                                    }}
+                                    disabled={isReplacingToken}
+                                    style={{ marginBottom: '0.5rem' }}
+                                    autoComplete="off"
+                                />
+                                {replaceTokenError && (
+                                    <p style={{ color: 'var(--error)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+                                        {replaceTokenError}
+                                    </p>
+                                )}
+                                {replaceTokenSuccess && (
+                                    <p style={{ color: 'var(--success, #22c55e)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+                                        {replaceTokenSuccess}
+                                    </p>
+                                )}
+                                <button
+                                    onClick={handleReplaceGitHubToken}
+                                    disabled={isReplacingToken || !newGithubToken.trim()}
+                                    className="btn btn-secondary"
+                                    style={{ width: '100%' }}
+                                >
+                                    {isReplacingToken ? (
+                                        <>
+                                            <Loader2 size={18} className="animate-spin" style={{ marginRight: '0.5rem', display: 'inline-block', verticalAlign: 'middle' }} />
+                                            Updating...
+                                        </>
+                                    ) : (
+                                        'Replace Token'
+                                    )}
                                 </button>
                             </div>
                             <div className="input-group">
@@ -1200,7 +1344,12 @@ export default function Dashboard() {
                                 </p>
                             </div>
                             <button
-                                onClick={() => setIsSettingsOpen(false)}
+                                onClick={() => {
+                                    setIsSettingsOpen(false);
+                                    setReplaceTokenError('');
+                                    setReplaceTokenSuccess('');
+                                    setNewGithubToken('');
+                                }}
                                 className="btn btn-primary"
                                 style={{ width: '100%' }}
                             >
